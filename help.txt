@@ -1,0 +1,3 @@
+source .venv/bin/activate - activate venv
+uv run tests.py - run stuff with uv
+python3 -m functions.get_file_content - -m tag to run "module" from root with correct imports
