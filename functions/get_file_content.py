@@ -20,7 +20,7 @@ schema_get_file_content = types.FunctionDeclaration(
     ),
 )
 
-def get_file_content(working_directory, file_path):
+def get_file_content(working_directory="", file_path=""):
     rel_path = os.path.join(working_directory, file_path)
     abs_path = os.path.abspath(rel_path)
     abs_path_root = os.path.abspath(working_directory)

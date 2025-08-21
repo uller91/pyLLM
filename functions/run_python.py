@@ -18,15 +18,15 @@ schema_run_python_file = types.FunctionDeclaration(
                 type=types.Type.ARRAY,
                 items=types.Schema(
                     type=types.Type.STRING,
-                    description="Optional arguments to pass to the Python file.",
+                    description="OPTIONAL arguments to pass to the Python file.",
                 ),
-                description="Optional arguments to pass to the Python file.",
+                description="OPTIONAL arguments to pass to the Python file.",
             ),
         },
     ),
 )
 
-def run_python_file(working_directory, file_path, args=[]):
+def run_python_file(working_directory="", file_path="", args=[]):
     rel_path = os.path.join(working_directory, file_path)
     abs_path = os.path.abspath(rel_path)
     abs_path_root = os.path.abspath(working_directory)

@@ -5,6 +5,8 @@ from functions.get_files_info import schema_get_files_info
 from functions.get_file_content import schema_get_file_content
 from functions.run_python import schema_run_python_file
 from functions.write_file import schema_write_file
+from functions.call_function import call_function
+
 from dotenv import load_dotenv
 
 from google import genai
@@ -70,13 +72,28 @@ def main():
     candidates_token_count = response.usage_metadata.candidates_token_count
     prompt_token_count = response.usage_metadata.prompt_token_count
 
-    #print(f"{response.text}\n")
-    print(f"Calling function: {response.function_calls[0].name}({response.function_calls[0].args})")
-
-    if verbose == True:
+    if verbose:
         print(f"User prompt: {request}")
         print(f"Prompt tokens: {prompt_token_count}")
         print(f"Response tokens: {candidates_token_count}")
+
+    if not response.function_calls:
+        print(f"{response.text}\n")
+        return
+
+    for function_call_part in response.function_calls:
+        #print(f"Calling function: {function_call_part.name}({function_call_part.args})")
+        function_call_result = call_function(function_call_part, verbose)
+
+        if not function_call_result.parts[0].function_response.response:
+            raise Exception("Fatal error!")
+            print("Fatal error!")
+        elif verbose:
+            print(f"-> {function_call_result.parts[0].function_response.response}")
+
+
+    
+        
 
 
 if __name__ == "__main__":

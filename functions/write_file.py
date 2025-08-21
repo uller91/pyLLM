@@ -21,7 +21,7 @@ schema_write_file = types.FunctionDeclaration(
     ),
 )
 
-def write_file(working_directory, file_path, content):
+def write_file(working_directory="", file_path="", content=""):
     rel_path = os.path.join(working_directory, file_path)
     abs_path = os.path.abspath(rel_path)
     abs_path_root = os.path.abspath(working_directory)
