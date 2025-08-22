@@ -6,6 +6,7 @@ from functions.get_file_content import schema_get_file_content
 from functions.run_python import schema_run_python_file
 from functions.write_file import schema_write_file
 from functions.call_function import call_function
+from functions.config import get_max_loops
 
 from dotenv import load_dotenv
 
@@ -63,36 +64,52 @@ def main():
         )
     """
     
-    response = client.models.generate_content(
-    model=model_name,
-    contents=messages,
-    config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt),
-    )
-    
-    candidates_token_count = response.usage_metadata.candidates_token_count
-    prompt_token_count = response.usage_metadata.prompt_token_count
+    i = 0
+    max_loops = get_max_loops()
+    while i < max_loops:
+        i += 1
+        #print(f"loop {i}\n")
 
-    if verbose:
-        print(f"User prompt: {request}")
-        print(f"Prompt tokens: {prompt_token_count}")
-        print(f"Response tokens: {candidates_token_count}")
+        try:
 
-    if not response.function_calls:
-        print(f"{response.text}\n")
-        return
+            response = client.models.generate_content(
+            model=model_name,
+            contents=messages,
+            config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt),
+            )
+            
+            if response.candidates != []:
+                for candidate in response.candidates:
+                    messages.append(candidate.content)
 
-    for function_call_part in response.function_calls:
-        #print(f"Calling function: {function_call_part.name}({function_call_part.args})")
-        function_call_result = call_function(function_call_part, verbose)
+            candidates_token_count = response.usage_metadata.candidates_token_count
+            prompt_token_count = response.usage_metadata.prompt_token_count
 
-        if not function_call_result.parts[0].function_response.response:
-            raise Exception("Fatal error!")
-            print("Fatal error!")
-        elif verbose:
-            print(f"-> {function_call_result.parts[0].function_response.response}")
+            if verbose:
+                print(f"User prompt: {request}")
+                print(f"Prompt tokens: {prompt_token_count}")
+                print(f"Response tokens: {candidates_token_count}")
 
+            if not response.function_calls:
+                print("Final response:")
+                print(f"{response.text}\n")
+                break
 
-    
+            for function_call_part in response.function_calls:
+                #print(f"Calling function: {function_call_part.name}({function_call_part.args})")
+                function_call_result = call_function(function_call_part, verbose)
+
+                if not function_call_result.parts[0].function_response.response:
+                    raise Exception("Fatal error!")
+                    print("Fatal error!")
+                elif verbose:
+                    print(f"-> {function_call_result.parts[0].function_response.response}")
+
+                function_call_message = types.Content(role="user", parts=[function_call_result.parts[0]])
+                messages.append(function_call_message)
+
+        except Exception as e:
+            print(f"Error encountered: {e}")
         
 
 
